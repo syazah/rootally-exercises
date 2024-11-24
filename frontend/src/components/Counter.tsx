@@ -6,9 +6,9 @@ type counterProps = {
   >;
 };
 enum Side {
-  LEFT,
-  RIGHT,
-  BOTH,
+  LEFT = "LEFT",
+  RIGHT = "RIGHT",
+  BOTH = "BOTH",
 }
 type Exercises = {
   id: number;

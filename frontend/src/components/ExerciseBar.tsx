@@ -3,9 +3,9 @@ import { CSS } from "@dnd-kit/utilities";
 import Counter from "./Counter";
 
 enum Side {
-  LEFT,
-  RIGHT,
-  BOTH,
+  LEFT = "LEFT",
+  RIGHT = "RIGHT",
+  BOTH = "BOTH",
 }
 type Exercises = {
   id: number;
@@ -64,7 +64,7 @@ function ExerciseBar({ exer, setExerciseData }: exerProps) {
                   });
                 }}
                 className={`px-4 ${
-                  exer.side === 0 || exer.side === 2
+                  exer.side === "LEFT" || exer.side === "BOTH"
                     ? "bg-primary"
                     : "bg-zinc-400"
                 } rounded-full text-white text-sm justify-center items-center flex cursor-pointer`}
@@ -82,7 +82,7 @@ function ExerciseBar({ exer, setExerciseData }: exerProps) {
                   });
                 }}
                 className={`px-4 ${
-                  exer.side === 1 || exer.side === 2
+                  exer.side === "RIGHT" || exer.side === "BOTH"
                     ? "bg-primary"
                     : "bg-zinc-400"
                 } rounded-full text-white text-sm justify-center items-center flex cursor-pointer`}
@@ -109,7 +109,11 @@ function ExerciseBar({ exer, setExerciseData }: exerProps) {
         <div className="flex justify-start items-center">
           <Counter name="sets" exer={exer} setExerciseData={setExerciseData} />
           <Counter name="reps" exer={exer} setExerciseData={setExerciseData} />
-          <Counter name="holdTime" exer={exer} setExerciseData={setExerciseData} />
+          <Counter
+            name="holdTime"
+            exer={exer}
+            setExerciseData={setExerciseData}
+          />
         </div>
       </div>
     </div>

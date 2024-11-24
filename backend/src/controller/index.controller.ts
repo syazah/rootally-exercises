@@ -6,6 +6,8 @@ import {
   NewProgramType,
   NewSubCategorySchema,
   NewSubcategoryType,
+  SaveProgramSchema,
+  SaveProgramType,
 } from "../types/index.types";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { PrismaClient } from "@prisma/client";
@@ -32,6 +34,7 @@ export const HandleAddProgramController = async (
     const data = await prisma.program.create({
       data: {
         name: requestBody.name,
+        combo: false,
       },
     });
     if (!data) {
@@ -151,7 +154,6 @@ export const HandleViewDetailCategoryController = async (
       where: { id: requestBody.id },
       include: {
         subcategories: true,
-        programs: true,
       },
     });
     if (!data) {
@@ -194,6 +196,82 @@ export const HandleAddSubCategoryController = async (
       );
     }
     return res.status(200).json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+};
+//GET COMBO PROGRAMS
+export const HandleGetComboProgramsController = async (
+  req: any,
+  res: any,
+  next: NextFunction
+) => {
+  try {
+    const data = await prisma.program.findMany({
+      where: { combo: true },
+      include: { exercises: true },
+    });
+    if (!data) {
+      return next(
+        ErrorHandler(500, "Something went wrong while getting the programs")
+      );
+    }
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    return next(error);
+  }
+};
+//! SAVE PROGRAM CONTROLLER
+export const HandleSaveProgramController = async (
+  req: any,
+  res: any,
+  next: NextFunction
+) => {
+  try {
+    const requestBody: SaveProgramType = req.body;
+    const validate = SaveProgramSchema.safeParse(requestBody);
+
+    if (!validate.success) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Required fields not provided" });
+    }
+
+    if (requestBody.exercises.length === 0) {
+      return next(ErrorHandler(400, "Must Have at least one exercise"));
+    }
+
+    // Create exercises
+    const createdExercises = [];
+    for (const exercise of requestBody.exercises) {
+      const createdExercise = await prisma.exercises.create({
+        data: {
+          name: exercise.name,
+          sets: exercise.sets,
+          reps: exercise.reps,
+          holdTime: exercise.holdTime,
+          description: exercise.description,
+          side: exercise.side,
+          pid: exercise.pid,
+        },
+      });
+      createdExercises.push({ id: createdExercise.id }); // Collect the created exercise IDs
+    }
+
+    // Update the program
+    await prisma.program.update({
+      where: { id: requestBody.id },
+      data: {
+        combo: requestBody.combo,
+        exercises: {
+          connect: createdExercises, // Use the correct variable
+        },
+      },
+    });
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Program and Exercises Saved" });
   } catch (error) {
     return next(error);
   }

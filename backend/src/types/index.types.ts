@@ -24,6 +24,24 @@ const NewSubCategorySchema = z.object({
   exercises: z.array(z.string()),
 });
 type NewSubcategoryType = z.infer<typeof NewSubCategorySchema>;
+
+//EXERCISE
+const ExerciseSchema = z.object({
+  name: z.string(),
+  sets: z.number().optional(),
+  reps: z.number().optional(),
+  holdTime: z.number(),
+  description: z.string().optional(),
+  side: z.enum(["LEFT", "RIGHT", "BOTH"]),
+  pid: z.number(),
+});
+//SAVE PROGRAM
+const SaveProgramSchema = z.object({
+  id: z.number(),
+  exercises: z.array(ExerciseSchema),
+  combo: z.boolean(),
+});
+type SaveProgramType = z.infer<typeof SaveProgramSchema>;
 export {
   NewProgramSchema,
   NewProgramType,
@@ -33,4 +51,6 @@ export {
   ProgramType,
   NewSubCategorySchema,
   NewSubcategoryType,
+  SaveProgramSchema,
+  SaveProgramType,
 };

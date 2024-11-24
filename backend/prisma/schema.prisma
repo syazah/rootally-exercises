@@ -20,13 +20,12 @@ enum Side{
 model Program{
     id              Int @id @default(autoincrement())
     name            String
-    categories      Category[]
     exercises       Exercises[]
+    combo           Boolean
 }
 model Category{
     id              Int @id @default(autoincrement())
     name            String
-    programs        Program[]
     subcategories   Subcategory[]
 }
 model Subcategory{

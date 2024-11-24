@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { closestCorners, DndContext } from "@dnd-kit/core";
+import { useNavigate, useParams } from "react-router-dom";
+import { closestCorners, DndContext, DragEndEvent } from "@dnd-kit/core";
 import {
+  arrayMove,
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import ExerciseBar from "../components/ExerciseBar";
 enum Side {
-  LEFT,
-  RIGHT,
-  BOTH,
+  LEFT = "LEFT",
+  RIGHT = "RIGHT",
+  BOTH = "BOTH",
 }
 type Exercises = {
   id: number;
@@ -19,6 +20,7 @@ type Exercises = {
   holdTime: number;
   description?: string;
   side: Side;
+  pid: number;
 };
 type ProgramData = {
   id: number;
@@ -31,9 +33,16 @@ type ResponseData = {
   message?: string;
   data?: ProgramData;
 };
+type ResponseNextData = {
+  success: boolean;
+  message?: string;
+  data?: Array<ProgramData>;
+};
 function Program() {
   const { id } = useParams();
   const [programData, setProgramData] = useState<null | ProgramData>(null);
+  const [combos, setCombos] = useState<null | Array<ProgramData>>(null);
+  const [selectedCombo, setSelectedCombo] = useState<null | ProgramData>(null);
   const [exerciseData, setExerciseData] = useState<null | Array<Exercises>>(
     null
   );
@@ -49,13 +58,25 @@ function Program() {
         method: "POST",
         body: JSON.stringify({ id: Number(id) }),
       });
+      const nextres = await fetch("http://localhost:8000/api/v1/combos", {
+        headers: { "Content-Type": "application/json" },
+        method: "GET",
+      });
+      const nextData: ResponseNextData = await nextres.json();
       const data: ResponseData = await res.json();
       if (data.success) {
         if (data.data) {
-          return setProgramData(data.data);
+          setProgramData(data.data);
         }
       } else {
         return alert(data.message);
+      }
+      if (nextData.success) {
+        if (nextData.data) {
+          return setCombos(nextData.data);
+        }
+      } else {
+        return alert(nextData.message);
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -83,17 +104,41 @@ function Program() {
             <h1 className="text-xl font-semibold text-white">
               {programData.name}
             </h1>
-            <select className="w-1/5 bg-[#362c86] p-1 rounded-full cursor-pointer outline-none"></select>
+            <select
+              value={JSON.stringify(selectedCombo)}
+              onChange={(e) => {
+                const newCombo = JSON.parse(e.target.value);
+                setSelectedCombo(newCombo);
+                console.log(newCombo);
+                if (newCombo?.exercises) {
+                  setExerciseData(newCombo.exercises);
+                }
+              }}
+              className="w-1/5 bg-[#362c86] p-1 rounded-full cursor-pointer outline-none text-base font-normal"
+            >
+              <option className="text-white font-normal text-base">
+                Select Combo
+              </option>
+              {combos?.map((combo, index) => {
+                return (
+                  <option value={JSON.stringify(combo)} key={index}>
+                    {combo.name}
+                  </option>
+                );
+              })}
+            </select>
           </div>
           <div className="w-full h-full p-2">
             {/* EXERCISES  */}
             <Exercise
+              id={Number(id)}
               exerciseData={exerciseData}
               setExerciseData={setExerciseData}
             />
 
             {/* BOTTOM BAR  */}
             <BottomBar
+              id={Number(id)}
               setExerciseData={setExerciseData}
               exerciseData={exerciseData}
             />
@@ -120,44 +165,97 @@ type Response = {
   message?: string;
   data?: Array<CategoryType>;
 };
-type exerProps = {
+
+type ExerProps = {
   exerciseData: Array<Exercises> | null;
+  id?: number;
   setExerciseData: React.Dispatch<
     React.SetStateAction<Array<Exercises> | null>
   >;
 };
-function Exercise({ exerciseData, setExerciseData }: exerProps) {
+
+function Exercise({ exerciseData, setExerciseData }: ExerProps) {
+  const getExerPos = (id: number): number => {
+    if (!exerciseData) return -1;
+    const index = exerciseData.findIndex((exer) => exer.id === id);
+    return index;
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id || !exerciseData) {
+      return;
+    }
+
+    const originalPos = getExerPos(active.id as number);
+    const newPos = getExerPos(over.id as number);
+    if (originalPos !== -1 && newPos !== -1) {
+      setExerciseData((exerciseData) => {
+        if (!exerciseData) return null;
+        return arrayMove(exerciseData, originalPos, newPos);
+      });
+    }
+  };
+
+  if (!exerciseData) return null;
   return (
-    <DndContext collisionDetection={closestCorners}>
-      {/* MAIN BOX  */}
-      <div className="w-full h-[45%] border-[1px] border-zinc-300 rounded-xl overflow-y-scroll">
-        {exerciseData != null && (
-          <SortableContext
-            items={exerciseData}
-            strategy={verticalListSortingStrategy}
-          >
-            {exerciseData?.map((exer, index) => {
-              return (
-                <React.Fragment key={index}>
-                  <ExerciseBar setExerciseData={setExerciseData} exer={exer} />
-                </React.Fragment>
-              );
-            })}
-          </SortableContext>
-        )}
-      </div>
-    </DndContext>
+    <div className="w-full border-[1px] h-[45%] overflow-y-scroll">
+      <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
+        <SortableContext
+          items={exerciseData.map((exer) => exer.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="w-full flex flex-col gap-2">
+            {exerciseData.map((exer) => (
+              <ExerciseBar
+                key={exer.id}
+                exer={exer}
+                setExerciseData={setExerciseData}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
+    </div>
   );
 }
-function BottomBar({ exerciseData, setExerciseData }: exerProps) {
+function BottomBar({ exerciseData, setExerciseData, id }: ExerProps) {
   const [categories, setCategories] = useState<Array<CategoryType> | null>(
     null
   );
+  const [loading, setLoading] = useState(false);
   const [DropdownExercises, setDropdownExercises] =
     useState<Array<string> | null>(null);
   const [openDropdown, setOpenDropdown] = useState(false);
 
   const [dayArray, setDayArray] = useState([-1, -1, -1, -1, -1, -1, -1]);
+  const navigate = useNavigate();
+  async function SubmitProgram() {
+    try {
+      setLoading(true);
+      const res = await fetch("http://localhost:8000/api/v1/save-program", {
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        body: JSON.stringify({ id, exercises: exerciseData, combo: true }),
+      });
+      const data: Response = await res.json();
+      if (data.success === true) {
+        setLoading(false);
+        return navigate("/");
+      } else {
+        setLoading(false);
+        alert(data.message);
+      }
+    } catch (error) {
+      setLoading(false);
+      if (error instanceof Error) {
+        return alert(error.toString());
+      } else {
+        return alert("Something went wrong");
+      }
+    }
+  }
   async function GetCategories() {
     try {
       const res = await fetch("http://localhost:8000/api/v1/view-categories", {
@@ -268,6 +366,7 @@ function BottomBar({ exerciseData, setExerciseData }: exerProps) {
                               side: Side.LEFT,
                               sets: 0,
                               reps: 0,
+                              pid: id === undefined ? 0 : id,
                             },
                           ];
                           setExerciseData(newExerciseData);
@@ -318,11 +417,11 @@ function BottomBar({ exerciseData, setExerciseData }: exerProps) {
           className="w-1/2 h-full resize-none p-2"
         />
         <div className="flex justify-end items-end w-1/2 h-full gap-2">
-          <div className="px-4 py-2 border-2 rounded-full border-tertiary text-tertiary">
-            Save Combo
-          </div>
-          <div className="px-4 py-2 bg-tertiary border-2 rounded-full border-tertiary  text-white">
-            Update
+          <div
+            onClick={SubmitProgram}
+            className="px-4 py-2 border-2 rounded-full border-tertiary text-tertiary hover:bg-tertiary hover:text-white cursor-pointer"
+          >
+            {loading ? "Loading..." : "Save Combo"}
           </div>
         </div>
       </div>

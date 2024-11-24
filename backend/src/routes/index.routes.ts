@@ -3,6 +3,8 @@ import {
   HandleAddCategoryController,
   HandleAddProgramController,
   HandleAddSubCategoryController,
+  HandleGetComboProgramsController,
+  HandleSaveProgramController,
   HandleViewCategoriesController,
   HandleViewDetailCategoryController,
   HandleViewDetailProgramController,
@@ -23,5 +25,10 @@ routes.get("/view-categories", HandleViewCategoriesController);
 
 //[SUBCATEGORY] ROUTES
 routes.post("/add-subcategory", HandleAddSubCategoryController);
+//GET COMBO
+routes.get("/combos", HandleGetComboProgramsController);
+
+//ADD PROGRAM
+routes.post("/save-program", HandleSaveProgramController);
 
 export default routes;

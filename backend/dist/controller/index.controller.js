@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HandleAddSubCategoryController = exports.HandleViewDetailCategoryController = exports.HandleViewCategoriesController = exports.HandleAddCategoryController = exports.HandleViewDetailProgramController = exports.HandleViewProgramsController = exports.HandleAddProgramController = void 0;
+exports.HandleSaveProgramController = exports.HandleGetComboProgramsController = exports.HandleAddSubCategoryController = exports.HandleViewDetailCategoryController = exports.HandleViewCategoriesController = exports.HandleAddCategoryController = exports.HandleViewDetailProgramController = exports.HandleViewProgramsController = exports.HandleAddProgramController = void 0;
 const index_types_1 = require("../types/index.types");
 const ErrorHandler_1 = require("../utils/ErrorHandler");
 const client_1 = require("@prisma/client");
@@ -25,6 +25,7 @@ const HandleAddProgramController = (req, res, next) => __awaiter(void 0, void 0,
         const data = yield prisma.program.create({
             data: {
                 name: requestBody.name,
+                combo: false,
             },
         });
         if (!data) {
@@ -125,7 +126,6 @@ const HandleViewDetailCategoryController = (req, res, next) => __awaiter(void 0,
             where: { id: requestBody.id },
             include: {
                 subcategories: true,
-                programs: true,
             },
         });
         if (!data) {
@@ -164,3 +164,68 @@ const HandleAddSubCategoryController = (req, res, next) => __awaiter(void 0, voi
     }
 });
 exports.HandleAddSubCategoryController = HandleAddSubCategoryController;
+//GET COMBO PROGRAMS
+const HandleGetComboProgramsController = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const data = yield prisma.program.findMany({
+            where: { combo: true },
+            include: { exercises: true },
+        });
+        if (!data) {
+            return next((0, ErrorHandler_1.ErrorHandler)(500, "Something went wrong while getting the programs"));
+        }
+        return res.status(200).json({ success: true, data });
+    }
+    catch (error) {
+        return next(error);
+    }
+});
+exports.HandleGetComboProgramsController = HandleGetComboProgramsController;
+//! SAVE PROGRAM CONTROLLER
+const HandleSaveProgramController = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const requestBody = req.body;
+        const validate = index_types_1.SaveProgramSchema.safeParse(requestBody);
+        if (!validate.success) {
+            return res
+                .status(400)
+                .json({ success: false, message: "Required fields not provided" });
+        }
+        if (requestBody.exercises.length === 0) {
+            return next((0, ErrorHandler_1.ErrorHandler)(400, "Must Have at least one exercise"));
+        }
+        // Create exercises
+        const createdExercises = [];
+        for (const exercise of requestBody.exercises) {
+            const createdExercise = yield prisma.exercises.create({
+                data: {
+                    name: exercise.name,
+                    sets: exercise.sets,
+                    reps: exercise.reps,
+                    holdTime: exercise.holdTime,
+                    description: exercise.description,
+                    side: exercise.side,
+                    pid: exercise.pid,
+                },
+            });
+            createdExercises.push({ id: createdExercise.id }); // Collect the created exercise IDs
+        }
+        // Update the program
+        yield prisma.program.update({
+            where: { id: requestBody.id },
+            data: {
+                combo: requestBody.combo,
+                exercises: {
+                    connect: createdExercises, // Use the correct variable
+                },
+            },
+        });
+        return res
+            .status(200)
+            .json({ success: true, message: "Program and Exercises Saved" });
+    }
+    catch (error) {
+        return next(error);
+    }
+});
+exports.HandleSaveProgramController = HandleSaveProgramController;

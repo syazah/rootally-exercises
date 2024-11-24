@@ -16,4 +16,8 @@ routes.post("/category-detail", index_controller_1.HandleViewDetailCategoryContr
 routes.get("/view-categories", index_controller_1.HandleViewCategoriesController);
 //[SUBCATEGORY] ROUTES
 routes.post("/add-subcategory", index_controller_1.HandleAddSubCategoryController);
+//GET COMBO
+routes.get("/combos", index_controller_1.HandleGetComboProgramsController);
+//ADD PROGRAM
+routes.post("/save-program", index_controller_1.HandleSaveProgramController);
 exports.default = routes;
