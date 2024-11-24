@@ -2,6 +2,7 @@ import express from "express";
 import {
   HandleAddCategoryController,
   HandleAddProgramController,
+  HandleAddSubCategoryController,
   HandleViewCategoriesController,
   HandleViewDetailCategoryController,
   HandleViewDetailProgramController,
@@ -21,6 +22,6 @@ routes.post("/category-detail", HandleViewDetailCategoryController);
 routes.get("/view-categories", HandleViewCategoriesController);
 
 //[SUBCATEGORY] ROUTES
-routes.post("add-subcategory", HandleAddSubCategoryController)
+routes.post("/add-subcategory", HandleAddSubCategoryController);
 
 export default routes;

@@ -5,3 +5,9 @@
 * {
   font-family: "Inter";
 }
+::-webkit-scrollbar {
+    width:6px
+}
+::-webkit-scrollbar-thumb{
+    background-color: orange;
+}

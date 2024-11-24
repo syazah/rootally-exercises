@@ -4,6 +4,8 @@ import {
   IdRequestType,
   NewProgramSchema,
   NewProgramType,
+  NewSubCategorySchema,
+  NewSubcategoryType,
 } from "../types/index.types";
 import { ErrorHandler } from "../utils/ErrorHandler";
 import { PrismaClient } from "@prisma/client";
@@ -75,6 +77,7 @@ export const HandleViewDetailProgramController = async (
     }
     const data = await prisma.program.findFirst({
       where: { id: requestBody.id },
+      include: { exercises: true },
     });
     if (!data) {
       return next(
@@ -125,7 +128,7 @@ export const HandleViewCategoriesController = async (
 ) => {
   try {
     const data = await prisma.category.findMany({
-      select: { name: true, id: true },
+      select: { name: true, id: true, subcategories: true },
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {
@@ -146,6 +149,10 @@ export const HandleViewDetailCategoryController = async (
     }
     const data = await prisma.category.findFirst({
       where: { id: requestBody.id },
+      include: {
+        subcategories: true,
+        programs: true,
+      },
     });
     if (!data) {
       return next(
@@ -166,8 +173,27 @@ export const HandleAddSubCategoryController = async (
   next: NextFunction
 ) => {
   try {
-    const requestBody = req.body;
-    
+    const requestBody: NewSubcategoryType = req.body;
+    const validate = NewSubCategorySchema.safeParse(requestBody);
+    if (!validate.success) {
+      return next(ErrorHandler(400, "Required fields are not provided"));
+    }
+    const data = await prisma.subcategory.create({
+      data: {
+        name: requestBody.name,
+        exercises: requestBody.exercises,
+        category: { connect: { id: requestBody.cid } },
+      },
+    });
+    if (!data) {
+      return next(
+        ErrorHandler(
+          400,
+          "Something went wrong while adding category to database"
+        )
+      );
+    }
+    return res.status(200).json({ success: true });
   } catch (error) {
     return next(error);
   }

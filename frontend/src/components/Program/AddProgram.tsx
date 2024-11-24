@@ -40,6 +40,7 @@ function AddProgram() {
   }, []);
   return (
     <div className="w-full h-full text-xl relative">
+      {/* POPUP  */}
       {addPopup || (
         <div
           onClick={() => setAddPopup(true)}
@@ -65,6 +66,8 @@ function AddProgram() {
       <div className="w-full mb-8 border-b-[2px] border-primary">
         <h1 className="font-semibold text-2xl">Your Programs</h1>
       </div>
+
+      {/* MAIN BODY  */}
       {currentPrograms === null ? (
         <div className="w-full h-full flex justify-center items-center">
           Loading...

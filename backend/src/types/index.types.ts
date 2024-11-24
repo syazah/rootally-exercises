@@ -17,6 +17,13 @@ const IdRequestBody = z.object({
   id: z.number(),
 });
 type IdRequestType = z.infer<typeof IdRequestBody>;
+//SUBCATEGORY REQUEST
+const NewSubCategorySchema = z.object({
+  name: z.string(),
+  cid: z.number(),
+  exercises: z.array(z.string()),
+});
+type NewSubcategoryType = z.infer<typeof NewSubCategorySchema>;
 export {
   NewProgramSchema,
   NewProgramType,
@@ -24,4 +31,6 @@ export {
   IdRequestType,
   ProgramSchema,
   ProgramType,
+  NewSubCategorySchema,
+  NewSubcategoryType,
 };

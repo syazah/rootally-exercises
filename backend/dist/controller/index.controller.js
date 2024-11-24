@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HandleViewDetailCategoryController = exports.HandleViewCategoriesController = exports.HandleAddCategoryController = exports.HandleViewDetailProgramController = exports.HandleViewProgramsController = exports.HandleAddProgramController = void 0;
+exports.HandleAddSubCategoryController = exports.HandleViewDetailCategoryController = exports.HandleViewCategoriesController = exports.HandleAddCategoryController = exports.HandleViewDetailProgramController = exports.HandleViewProgramsController = exports.HandleAddProgramController = void 0;
 const index_types_1 = require("../types/index.types");
 const ErrorHandler_1 = require("../utils/ErrorHandler");
 const client_1 = require("@prisma/client");
@@ -62,6 +62,7 @@ const HandleViewDetailProgramController = (req, res, next) => __awaiter(void 0, 
         }
         const data = yield prisma.program.findFirst({
             where: { id: requestBody.id },
+            include: { exercises: true },
         });
         if (!data) {
             return next((0, ErrorHandler_1.ErrorHandler)(500, "Something went wrong while fetching program details"));
@@ -103,7 +104,7 @@ exports.HandleAddCategoryController = HandleAddCategoryController;
 const HandleViewCategoriesController = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const data = yield prisma.category.findMany({
-            select: { name: true, id: true },
+            select: { name: true, id: true, subcategories: true },
         });
         return res.status(200).json({ success: true, data });
     }
@@ -122,6 +123,10 @@ const HandleViewDetailCategoryController = (req, res, next) => __awaiter(void 0,
         }
         const data = yield prisma.category.findFirst({
             where: { id: requestBody.id },
+            include: {
+                subcategories: true,
+                programs: true,
+            },
         });
         if (!data) {
             return next((0, ErrorHandler_1.ErrorHandler)(500, "Something went wrong while fetching program details"));
@@ -133,3 +138,29 @@ const HandleViewDetailCategoryController = (req, res, next) => __awaiter(void 0,
     }
 });
 exports.HandleViewDetailCategoryController = HandleViewDetailCategoryController;
+//!SUBCATEGORY
+//ADD SUBCATEGORY
+const HandleAddSubCategoryController = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const requestBody = req.body;
+        const validate = index_types_1.NewSubCategorySchema.safeParse(requestBody);
+        if (!validate.success) {
+            return next((0, ErrorHandler_1.ErrorHandler)(400, "Required fields are not provided"));
+        }
+        const data = yield prisma.subcategory.create({
+            data: {
+                name: requestBody.name,
+                exercises: requestBody.exercises,
+                category: { connect: { id: requestBody.cid } },
+            },
+        });
+        if (!data) {
+            return next((0, ErrorHandler_1.ErrorHandler)(400, "Something went wrong while adding category to database"));
+        }
+        return res.status(200).json({ success: true });
+    }
+    catch (error) {
+        return next(error);
+    }
+});
+exports.HandleAddSubCategoryController = HandleAddSubCategoryController;
