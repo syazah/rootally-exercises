@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HandleSaveProgramController = exports.HandleGetComboProgramsController = exports.HandleAddSubCategoryController = exports.HandleViewDetailCategoryController = exports.HandleViewCategoriesController = exports.HandleAddCategoryController = exports.HandleViewDetailProgramController = exports.HandleViewProgramsController = exports.HandleAddProgramController = void 0;
+exports.HandleSaveProgramController = exports.HandleGetComboProgramsController = exports.HandleAddSubCategoryController = exports.HandleViewDetailCategoryController = exports.HandleViewCategoriesController = exports.HandleAddCategoryController = exports.HandleDeleteProgramController = exports.HandleViewDetailProgramController = exports.HandleViewProgramsController = exports.HandleAddProgramController = void 0;
 const index_types_1 = require("../types/index.types");
 const ErrorHandler_1 = require("../utils/ErrorHandler");
 const client_1 = require("@prisma/client");
@@ -75,6 +75,22 @@ const HandleViewDetailProgramController = (req, res, next) => __awaiter(void 0, 
     }
 });
 exports.HandleViewDetailProgramController = HandleViewDetailProgramController;
+//DELETE PROGRAM
+const HandleDeleteProgramController = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const requestBody = req.body;
+        const validate = index_types_1.IdRequestBody.safeParse(requestBody);
+        if (!validate.success) {
+            return next((0, ErrorHandler_1.ErrorHandler)(400, "Id not provided correctly"));
+        }
+        yield prisma.program.delete({ where: { id: requestBody.id } });
+        return res.status(200).json({ success: true });
+    }
+    catch (error) {
+        return next(error);
+    }
+});
+exports.HandleDeleteProgramController = HandleDeleteProgramController;
 //!CATEGORY
 //ADD CATEGORY
 const HandleAddCategoryController = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -123,7 +139,7 @@ const HandleViewDetailCategoryController = (req, res, next) => __awaiter(void 0,
             return next((0, ErrorHandler_1.ErrorHandler)(400, "Valid details are not provided"));
         }
         const data = yield prisma.category.findFirst({
-            where: { id: requestBody.id },
+            where: { id: Number(requestBody.id) },
             include: {
                 subcategories: true,
             },

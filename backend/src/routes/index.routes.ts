@@ -3,6 +3,7 @@ import {
   HandleAddCategoryController,
   HandleAddProgramController,
   HandleAddSubCategoryController,
+  HandleDeleteProgramController,
   HandleGetComboProgramsController,
   HandleSaveProgramController,
   HandleViewCategoriesController,
@@ -17,6 +18,7 @@ const routes = express.Router();
 routes.post("/add-program", HandleAddProgramController);
 routes.post("/program-detail", HandleViewDetailProgramController);
 routes.get("/view-programs", HandleViewProgramsController);
+routes.delete("/delete-program", HandleDeleteProgramController)
 
 //[CATEGORY] ROUTES
 routes.post("/add-category", HandleAddCategoryController);

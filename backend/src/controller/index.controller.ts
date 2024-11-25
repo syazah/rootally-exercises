@@ -92,7 +92,24 @@ export const HandleViewDetailProgramController = async (
     return next(error);
   }
 };
-
+//DELETE PROGRAM
+export const HandleDeleteProgramController = async (
+  req: any,
+  res: any,
+  next: NextFunction
+) => {
+  try {
+    const requestBody: IdRequestType = req.body;
+    const validate = IdRequestBody.safeParse(requestBody);
+    if (!validate.success) {
+      return next(ErrorHandler(400, "Id not provided correctly"));
+    }
+    await prisma.program.delete({ where: { id: requestBody.id } });
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+};
 //!CATEGORY
 //ADD CATEGORY
 export const HandleAddCategoryController = async (
@@ -151,7 +168,7 @@ export const HandleViewDetailCategoryController = async (
       return next(ErrorHandler(400, "Valid details are not provided"));
     }
     const data = await prisma.category.findFirst({
-      where: { id: requestBody.id },
+      where: { id: Number(requestBody.id) },
       include: {
         subcategories: true,
       },

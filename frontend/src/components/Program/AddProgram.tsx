@@ -35,6 +35,31 @@ function AddProgram() {
     }
   }
 
+  async function HandleDeletePrograms(id: number) {
+    try {
+      const res = await fetch("http://localhost:8000/api/v1/delete-program", {
+        headers: { "Content-Type": "application/json" },
+        method: "DELETE",
+        body: JSON.stringify({ id }),
+      });
+      const data: Response = await res.json();
+      if (data.success === true) {
+        HandleGetPrograms();
+        return alert("Program Deleted Successfully");
+      } else {
+        return alert(data.message);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return alert(error.toString());
+      } else {
+        return alert(
+          "Something went wrong while deleting the particular program"
+        );
+      }
+    }
+  }
+
   useEffect(() => {
     HandleGetPrograms();
   }, []);
@@ -76,13 +101,11 @@ function AddProgram() {
         <div className="w-full h-full flex flex-wrap gap-4">
           {currentPrograms?.map((program, index) => {
             return (
-              <Link
-                to={`/program/${program.id}`}
-                key={index}
-                className="w-1/5 bg-primary shadow-xl cursor-pointer h-[100px] rounded-lg p-2 text-white justify-center items-center flex border-[#362c86] border-[5px] hover:shadow-none relative"
-              >
-                {program?.name}
-                <div className="absolute w-8 h-8 rounded-full bg-tertiary -top-4 -right-4 cursor-pointer justify-center flex items-center shadow-2xl">
+              <div className="w-1/5 bg-primary shadow-xl cursor-pointer h-[100px] rounded-lg p-2 text-white justify-center items-center flex border-[#362c86] border-[5px] hover:shadow-none relative">
+                <div
+                  onClick={() => HandleDeletePrograms(program.id)}
+                  className="absolute w-8 h-8 rounded-full bg-tertiary -top-4 -right-4 cursor-pointer justify-center flex items-center shadow-2xl z-20"
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -98,7 +121,10 @@ function AddProgram() {
                     />
                   </svg>
                 </div>
-              </Link>
+                <Link to={`/program/${program.id}`} key={index} className="">
+                  {program?.name}
+                </Link>
+              </div>
             );
           })}
         </div>

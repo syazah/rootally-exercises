@@ -10,6 +10,7 @@ const routes = express_1.default.Router();
 routes.post("/add-program", index_controller_1.HandleAddProgramController);
 routes.post("/program-detail", index_controller_1.HandleViewDetailProgramController);
 routes.get("/view-programs", index_controller_1.HandleViewProgramsController);
+routes.delete("/delete-program", index_controller_1.HandleDeleteProgramController);
 //[CATEGORY] ROUTES
 routes.post("/add-category", index_controller_1.HandleAddCategoryController);
 routes.post("/category-detail", index_controller_1.HandleViewDetailCategoryController);

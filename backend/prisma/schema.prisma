@@ -44,5 +44,5 @@ model Exercises{
     description     String?
     side            Side
     pid             Int
-    program         Program @relation(fields: [pid], references: [id])
+    program         Program @relation(fields: [pid], references: [id], onDelete: Cascade)
 }
